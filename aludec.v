@@ -77,7 +77,7 @@ module aludec(
 				`ORI_OP:  alucontrol <= `OR_CONTROL;
 				`MEM_OP:  alucontrol <= `ADD_CONTROL;
 				`ADDI_OP: alucontrol <= `ADD_CONTROL;
-				`ADDIU_OP:alucontrol <= `ADD_CONTROL;
+				`ADDIU_OP:alucontrol <= `ADDU_CONTROL;
 				`MTC0_OP:alucontrol <= `MTC0_CONTROL;
 				`MFC0_OP:alucontrol <= `MFC0_CONTROL;
 				`SPECIAL2_OP:begin
