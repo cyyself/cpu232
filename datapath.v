@@ -374,7 +374,7 @@ module datapath(
 		.sel(instrM[2:0]),
 		.data_i(aluoutM),
 		// .int_i(int),
-		.int_i(6'b000_000),
+		.int_i(6'b000_000), //todo: link int and boot pmon
 		.excepttype_i(excepttypeM),
 		.current_inst_addr_i(pcM),
 		.is_in_delayslot_i(is_in_delayslotM),
