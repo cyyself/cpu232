@@ -326,7 +326,7 @@ module cp0(
 					end
 					status_o[1] <= 2'b1;
 					cause_o[6:2] <= memwriteM ? 5'b00011 : 5'b00010;
-					badvaddr <= bad_addr_i;
+					badvaddr <= data_i;
 					cp0_entryHi <= {data_i[31:12],cp0_entryHi[11:0]};
 					cp0_context[22:4] <= bad_addr_i[31:13];
 				end
@@ -341,7 +341,7 @@ module cp0(
 					end
 					status_o[1] <= 2'b1;
 					cause_o[6:2] <= memwriteM ? 5'b00011 : 5'b00010;
-					badvaddr <= bad_addr_i;
+					badvaddr <= data_i;
 					cp0_entryHi <= {data_i[31:12],cp0_entryHi[11:0]};
 					cp0_context[22:4] <= bad_addr_i[31:13];
 				end
