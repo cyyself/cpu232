@@ -71,7 +71,7 @@ module cp0(
 			cp0_random <= `ZeroWord;
 			count_o <= `ZeroWord;
 			compare_o <= `ZeroWord;
-			status_o <= 32'b00010000010010001111111100000001;
+			status_o <= 32'b00010000010100001111111100000001;
 			cause_o <= `ZeroWord;
 			epc_o <= `ZeroWord;
 			config_o <= {1'b1,21'b0,3'b1,7'b0};
