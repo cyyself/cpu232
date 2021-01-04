@@ -21,7 +21,7 @@
 `include "defines.h"
 
 module godson_cpu_mid(
-	input wire[5:0] interrupt_i,
+	input wire[4:0] interrupt_i,
 	input wire coreclock,areset_n,
 	input wire nmi,
 

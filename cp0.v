@@ -71,7 +71,7 @@ module cp0(
 			cp0_random <= `ZeroWord;
 			count_o <= `ZeroWord;
 			compare_o <= `ZeroWord;
-			status_o <= 32'h1040ff01;
+			status_o <= 32'b00010000010010001111111100000001;
 			cause_o <= `ZeroWord;
 			epc_o <= `ZeroWord;
 			config_o <= {1'b1,21'b0,3'b1,7'b0};
@@ -84,7 +84,7 @@ module cp0(
 			cp0_entryHi <= `ZeroWord;
 		end else begin
 			count_o <= count_o + 1;
-			cause_o[15:10] <= int_i;
+			cause_o[15:10] <= ~int_i;
 			if(compare_o != `ZeroWord && count_o == compare_o) begin
 				/* code */
 				timer_int_o <= `InterruptAssert;

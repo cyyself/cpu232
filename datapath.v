@@ -21,7 +21,7 @@
 
 `include "defines.h"
 module datapath(
-	input [5:0] int,
+	(*mark_debug = "true"*) input [4:0] int,
 	input wire clk,rst,
 	//fetch stage
 	(*mark_debug = "true"*) output wire[31:0] pcF,
@@ -374,7 +374,7 @@ module datapath(
 		.sel(instrM[2:0]),
 		.data_i(aluoutM),
 		// .int_i(int),
-		.int_i(6'b000_000), //todo: link int and boot pmon
+		.int_i({1'b1,int[4:0]}), //todo: debug int
 		.excepttype_i(excepttypeM),
 		.current_inst_addr_i(pcM),
 		.is_in_delayslot_i(is_in_delayslotM),
