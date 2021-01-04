@@ -21,8 +21,8 @@
 `include "defines.h"
 
 module godson_cpu_mid(
-	input wire[5:0] int,
-	input wire aclk,aresetn,
+	input wire[5:0] interrupt_i,
+	input wire coreclock,areset_n,
 	input wire nmi,
 
 	 // axi port
@@ -174,7 +174,7 @@ module godson_cpu_mid(
 	wire LLbit_weW;
 	wire LLbit_o;
 	controller c(
-		aclk,~aresetn,
+		coreclock,~areset_n,
 		//decode stage
 		instrD,
 		equalD,stallD,
@@ -202,8 +202,8 @@ module godson_cpu_mid(
 		LLbit_o
 		);
 	datapath dp(
-		int,
-		aclk,~aresetn,
+		interrupt_i,
+		coreclock,~areset_n,
 		//fetch stage
 		pcF,
 		instrF,
@@ -257,7 +257,7 @@ module godson_cpu_mid(
 	    );
 	
 	TLB tlb(
-		.clk 			(aclk),
+		.clk 			(coreclock),
 		.tlb_typeM		(tlb_typeM),
 		.inst_vaddr 	(pcF),
 		.data_vaddr_in 	(aluoutM),
@@ -299,7 +299,7 @@ module godson_cpu_mid(
 
 
 	//assign flag = 1'b1;
-	assign flag = (aluoutM[31:29] == 3'b101) ? 1 : 0;
+	assign flag = 1;//(aluoutM[31:29] == 3'b101) ? 1 : 0;
 	assign dram_memen = (memenM & ~(|excepttypeM)) ? (flag ? 0 : 1) : 0;
 	assign confreg_memen = (memenM & ~(|excepttypeM)) ? (flag ? 1 : 0) : 0;
 	assign readdataM = flag ? confreg_readdataM : dram_readdataM;
@@ -321,8 +321,8 @@ module godson_cpu_mid(
 	wire [31:0] confreg_readdataM;
 	//ok
 	I_Cache i_cache(
-		.clk(aclk),
-		.rst(aresetn),
+		.clk(coreclock),
+		.rst(areset_n),
 		.inst_paddr(inst_paddr),
 		.instrF(instrF),
 		.excepttypeM(excepttypeM),
@@ -341,8 +341,8 @@ module godson_cpu_mid(
 		);
 	D_Cache d_cache(
 		//cpu side
-		.clk 			(aclk),
-		.rst 			(~aresetn),
+		.clk 			(coreclock),
+		.rst 			(~areset_n),
 		.memwriteM 		(memwriteM),
 	 	.sel 			(sel),
 		.data_sram_size (data_sram_size),
@@ -367,8 +367,8 @@ module godson_cpu_mid(
 	//
 	d_confreg_port d_confreg_port(
 		//cpu side
-		.clk 			(aclk),
-		.rst 			(aresetn),
+		.clk 			(coreclock),
+		.rst 			(areset_n),
 		.memwriteM 		(memwriteM),
 	 	.sel 			(sel),
 		.data_sram_size (data_sram_size),
@@ -397,8 +397,8 @@ module godson_cpu_mid(
 	assign data_wdata = flag ? confreg_data_wdata : dram_data_wdata;
 
 	axi_interface interface(
-	.clk               (aclk         ), 
-    .resetn            (aresetn     ), 
+	.clk               (coreclock         ), 
+    .resetn            (areset_n     ), 
 
     //inst sram-like 
     .inst_req          (inst_req    ),
