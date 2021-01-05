@@ -68,7 +68,7 @@ module cp0(
 			cp0_entryLo0 <= `ZeroWord;
 			cp0_entryLo1 <= `ZeroWord;
 			cp0_pageMask <= `ZeroWord;
-			cp0_random <= `ZeroWord;
+			cp0_random <= 32'd31;
 			count_o <= `ZeroWord;
 			compare_o <= `ZeroWord;
 			status_o <= 32'b00010000010100001111111100000001;
@@ -89,6 +89,9 @@ module cp0(
 				/* code */
 				timer_int_o <= `InterruptAssert;
 			end
+
+			cp0_random <= (cp0_random == cp0_wired || (we_i == `WriteEnable && waddr_i == `CP0_REG_WIRED)) ? 32'd31 : ( cp0_random - 1 );
+			
 			if(we_i == `WriteEnable) begin
 				/* code */
 				case (waddr_i)
@@ -134,9 +137,6 @@ module cp0(
 					end
 					`CP0_REG_WIRED:begin
 						cp0_wired <= data_i & 32'h0000001f;
-					end
-					`CP0_REG_RANDOM:begin
-						cp0_random <= count_o[4:0]%(32'd32-cp0_wired)+cp0_wired;
 					end
 					`CP0_REG_CONTEXT:begin
 						cp0_context <= data_i[31:23];
