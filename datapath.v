@@ -374,7 +374,7 @@ module datapath(
 		.sel(instrM[2:0]),
 		.data_i(aluoutM),
 		// .int_i(int),
-		.int_i({1'b1,int[4:0]}), //todo: debug int
+		.int_i(int[4:0]),
 		.excepttype_i(excepttypeM),
 		.current_inst_addr_i(pcM),
 		.is_in_delayslot_i(is_in_delayslotM),

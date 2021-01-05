@@ -31,7 +31,7 @@ module cp0(
 	input[2:0] sel,
 	input[`RegBus] data_i,
 
-	input wire[5:0] int_i,
+	input wire[4:0] int_i,
 
 	input wire[`RegBus] excepttype_i,
 	input wire[`RegBus] current_inst_addr_i,
@@ -84,7 +84,7 @@ module cp0(
 			cp0_entryHi <= `ZeroWord;
 		end else begin
 			count_o <= count_o + 1;
-			cause_o[15:10] <= ~int_i;
+			cause_o[15:10] <= {timer_int_o,~int_i};
 			if(compare_o != `ZeroWord && count_o == compare_o) begin
 				/* code */
 				timer_int_o <= `InterruptAssert;
