@@ -36,7 +36,6 @@ module exception(
 			/* code */
 			excepttype <= 32'b0;
 		end else begin 
-			excepttype <= 32'b0;
 			if(((cp0_cause[15:8] & cp0_status[15:8]) != 8'h00) &&
 				 	(cp0_status[1] == 1'b0) && (cp0_status[0] == 1'b1)) begin
 				/* code */
@@ -84,8 +83,11 @@ module exception(
 			end else if(tlb_except2M[0] == 1'b1) begin
 				/* inst_tlb_invalid_fault */
 				excepttype <= 32'h00000014;
+			end
+			else begin
+				excepttype <= 32'b0;
+			end
 		end
-	end
 	end
 	
 endmodule
