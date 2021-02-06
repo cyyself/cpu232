@@ -12,7 +12,7 @@
 //	cache: 1_word + 11_index write back
 //////////////////////////////////////////////////////////////////////////////////
 module	D_Cache #(parameter A_WIDTH = 32,
-	parameter C_INDEX = 6)(
+	parameter C_INDEX = 10)(
 	input clk,
 	input rst,
 	//cpu side
@@ -41,7 +41,6 @@ module	D_Cache #(parameter A_WIDTH = 32,
 	localparam		WR_DRAM		=	1;
 	localparam		RD_DRAM		=	2;
 
-	integer	i;
 
 	localparam T_WIDTH = A_WIDTH - C_INDEX -2;	//tag width:
 	localparam C_WIDTH = 32 + T_WIDTH + 2;
@@ -106,73 +105,78 @@ module	D_Cache #(parameter A_WIDTH = 32,
 	assign data_size = 2'b10;
 
 // cpu/dram writes data_cache	å†™cache
-	always@(posedge clk)
-	begin
-		if(rst)						//init cache memery
-		begin
-			for(i=0;i<(1<<C_INDEX);i=i+1)
-			begin
+	genvar i;
+	generate
+	for (i=0;i<(1<<C_INDEX);i=i+1) begin : clear_cache
+		always @(posedge clk) begin
+			if (rst) begin
 				d_valid[i] <= 1'b0;
 			end
 		end
-		else if(dram_rd_val)	// dram write cache block
-		begin
-			//D_SRAM[index]	<=	{1'b1, 1'b0, data_paddr[31:13],data_rdata};
-			d_valid[index]  <=  1'b1;
-			d_dirty[index]	<=  1'b0;
-			d_tags[index]	<=  tag;
-			d_data1[index]	<=	data_rdata[31:24];
-			d_data2[index]	<=	data_rdata[23:16];
-			d_data3[index]	<=	data_rdata[15:8];
-			d_data4[index]	<=	data_rdata[7:0];
+	end
+	endgenerate
+	always@(posedge clk)
+	begin
+		if(!rst) begin
+			if(dram_rd_val)	// dram write cache block
+			begin
+				//D_SRAM[index]	<=	{1'b1, 1'b0, data_paddr[31:13],data_rdata};
+				d_valid[index]  <=  1'b1;
+				d_dirty[index]	<=  1'b0;
+				d_tags[index]	<=  tag;
+				d_data1[index]	<=	data_rdata[31:24];
+				d_data2[index]	<=	data_rdata[23:16];
+				d_data3[index]	<=	data_rdata[15:8];
+				d_data4[index]	<=	data_rdata[7:0];
 
-		end
-		else if( cache_hit & memenM & memwriteM )		//hit å¹¶ä¸” å†™cache
-		begin
-			// wirte dirty bit
-			//D_SRAM[index][51] 	<=	1'b1;
-			d_dirty[index]		<=  1'b1;
-			case (sel)
-				4'b1111:begin//sw
-					d_data1[index] <= writedata2M[31:24];
-                    d_data2[index] <= writedata2M[23:16];
-                    d_data3[index] <= writedata2M[15:8];
-                    d_data4[index] <= writedata2M[7:0];
-				end
-				4'b1110:begin//sw
-					d_data1[index] <= writedata2M[31:24];
-                    d_data2[index] <= writedata2M[23:16];
-                    d_data3[index] <= writedata2M[15:8];
-                    
-				end
-				4'b1100:begin//sh
-					d_data1[index] <= writedata2M[31:24];
-                    d_data2[index] <= writedata2M[23:16];
-				end
-				4'b0011:begin//sh
-					d_data3[index] <= writedata2M[15:8];
-                    d_data4[index] <= writedata2M[7:0];
-				end
-				4'b0111:begin//sw
-                    d_data2[index] <= writedata2M[23:16];
-                    d_data3[index] <= writedata2M[15:8];
-                    d_data4[index] <= writedata2M[7:0];
-				end
-				4'b1000:begin//sb
-					d_data1[index] <= writedata2M[31:24];
-				end
-				4'b0100:begin
-					d_data2[index] <= writedata2M[23:16];
-				end
-				4'b0010:begin
-					d_data3[index] <= writedata2M[15:8];
-				end
-				4'b0001:begin
-					d_data4[index] <= writedata2M[7:0];
-				end
+			end
+			else if( cache_hit & memenM & memwriteM )		//hit å¹¶ä¸” å†™cache
+			begin
+				// wirte dirty bit
+				//D_SRAM[index][51] 	<=	1'b1;
+				d_dirty[index]		<=  1'b1;
+				case (sel)
+					4'b1111:begin//sw
+						d_data1[index] <= writedata2M[31:24];
+						d_data2[index] <= writedata2M[23:16];
+						d_data3[index] <= writedata2M[15:8];
+						d_data4[index] <= writedata2M[7:0];
+					end
+					4'b1110:begin//sw
+						d_data1[index] <= writedata2M[31:24];
+						d_data2[index] <= writedata2M[23:16];
+						d_data3[index] <= writedata2M[15:8];
+						
+					end
+					4'b1100:begin//sh
+						d_data1[index] <= writedata2M[31:24];
+						d_data2[index] <= writedata2M[23:16];
+					end
+					4'b0011:begin//sh
+						d_data3[index] <= writedata2M[15:8];
+						d_data4[index] <= writedata2M[7:0];
+					end
+					4'b0111:begin//sw
+						d_data2[index] <= writedata2M[23:16];
+						d_data3[index] <= writedata2M[15:8];
+						d_data4[index] <= writedata2M[7:0];
+					end
+					4'b1000:begin//sb
+						d_data1[index] <= writedata2M[31:24];
+					end
+					4'b0100:begin
+						d_data2[index] <= writedata2M[23:16];
+					end
+					4'b0010:begin
+						d_data3[index] <= writedata2M[15:8];
+					end
+					4'b0001:begin
+						d_data4[index] <= writedata2M[7:0];
+					end
 
-			default: ;
-			endcase
+				default: ;
+				endcase
+			end
 		end
 	end
 

@@ -21,7 +21,7 @@
 
 
 module I_Cache #(parameter A_WIDTH = 32,
-    parameter C_INDEX = 6)(
+    parameter C_INDEX = 10)(
 	input clk,
 	input rst,
 
@@ -111,16 +111,19 @@ module I_Cache #(parameter A_WIDTH = 32,
                     sel_out? c_dout:inst_rdata;
     //assign instrF = (is_clear || IF_inst_addr_err) ? 32'd0 : inst_rdata;
  	
-    integer i;
-
+    genvar i;
+    generate
+        for (i=0;i<(1<<C_INDEX);i=i+1) begin
+            always @(posedge clk) begin
+                if (!rst) begin
+                    d_valid[i] <= 1'b0;
+                end
+            end
+        end
+    endgenerate
     always @(posedge clk) begin
-        if (rst == 1'b0) begin
-            
-            for (i = 0; i<(1<<C_INDEX); i=i+1 ) begin
-                d_valid[i] <= 1'b0;
-            end 
-        end else if (c_write & ~is_clear) begin
-                d_valid[index] <= 1'b1;
+        if (rst & c_write & ~is_clear) begin
+            d_valid[index] <= 1'b1;
         end
       
     end
