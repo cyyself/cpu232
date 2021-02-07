@@ -153,7 +153,7 @@ assign inst_paddr_o = {
         inst_hit_exist ? 
         (
             (
-                (inst_vaddr[inst_mask_highbit[i]] ? EntryLo1[inst_hit_idx][25:6] : EntryLo0[inst_hit_idx][25:6])
+                (inst_vaddr[inst_mask_highbit[inst_hit_idx]] ? EntryLo1[inst_hit_idx][25:6] : EntryLo0[inst_hit_idx][25:6])
                 &
                 {1'b1,~PageMask[inst_hit_idx][31:13]}
             )
@@ -175,7 +175,7 @@ assign inst_paddr_o = {
 
 assign inst_V_flag = 
     inst_direct |
-    (inst_hit_exist & (inst_vaddr[inst_mask_highbit[i]] ? EntryLo1[inst_hit_idx][`VALID] : EntryLo0[inst_hit_idx][`VALID]) );
+    (inst_hit_exist & (inst_vaddr[inst_mask_highbit[inst_hit_idx]] ? EntryLo1[inst_hit_idx][`VALID] : EntryLo0[inst_hit_idx][`VALID]) );
 
 //---- data
 //对于TLBP指令的查找，交由data部分进行处理。
@@ -190,21 +190,21 @@ genvar j;
 generate
     for(j=0;j<`TLB_LINE;j=j+1)
     begin
-        assign data_mask_highbit[i] = 
-            ( (~PageMask[i][29]) & PageMask[i][28] ? 5'd28 : 5'd0) | 
-            ( (~PageMask[i][27]) & PageMask[i][26] ? 5'd26 : 5'd0) | 
-            ( (~PageMask[i][25]) & PageMask[i][24] ? 5'd24 : 5'd0) | 
-            ( (~PageMask[i][23]) & PageMask[i][22] ? 5'd22 : 5'd0) | 
-            ( (~PageMask[i][21]) & PageMask[i][20] ? 5'd20 : 5'd0) | 
-            ( (~PageMask[i][19]) & PageMask[i][18] ? 5'd18 : 5'd0) | 
-            ( (~PageMask[i][17]) & PageMask[i][16] ? 5'd16 : 5'd0) | 
-            ( (~PageMask[i][15]) & PageMask[i][14] ? 5'd14 : 5'd0) | 
-            ( (~PageMask[i][13]) ? 5'd12 : 5'd0);
+        assign data_mask_highbit[j] = 
+            ( (~PageMask[j][29]) & PageMask[j][28] ? 5'd28 : 5'd0) | 
+            ( (~PageMask[j][27]) & PageMask[j][26] ? 5'd26 : 5'd0) | 
+            ( (~PageMask[j][25]) & PageMask[j][24] ? 5'd24 : 5'd0) | 
+            ( (~PageMask[j][23]) & PageMask[j][22] ? 5'd22 : 5'd0) | 
+            ( (~PageMask[j][21]) & PageMask[j][20] ? 5'd20 : 5'd0) | 
+            ( (~PageMask[j][19]) & PageMask[j][18] ? 5'd18 : 5'd0) | 
+            ( (~PageMask[j][17]) & PageMask[j][16] ? 5'd16 : 5'd0) | 
+            ( (~PageMask[j][15]) & PageMask[j][14] ? 5'd14 : 5'd0) | 
+            ( (~PageMask[j][13]) ? 5'd12 : 5'd0);
         assign data_hit[j] = 
             (//match
                 (EntryHi0[j][`ASID] === current_ASID)       | 
-                (  data_vaddr_tofind[data_mask_highbit[i]]  & EntryLo1[j][`GLOBAL])  | 
-                ((~data_vaddr_tofind[data_mask_highbit[i]]) & EntryLo0[j][`GLOBAL])
+                (  data_vaddr_tofind[data_mask_highbit[j]]  & EntryLo1[j][`GLOBAL])  | 
+                ((~data_vaddr_tofind[data_mask_highbit[j]]) & EntryLo0[j][`GLOBAL])
             )
             &
             (
@@ -250,7 +250,7 @@ assign data_paddr_o = {
         data_hit_exist & !TLBP ?
         (
             (
-                (data_vaddr_in[data_mask_highbit[i]] ? EntryLo1[data_hit_idx][25:6] : EntryLo0[data_hit_idx][25:6])
+                (data_vaddr_in[data_mask_highbit[data_hit_idx]] ? EntryLo1[data_hit_idx][25:6] : EntryLo0[data_hit_idx][25:6])
                 &
                 {1'b1,~PageMask[data_hit_idx][31:13]}
             )
@@ -276,11 +276,11 @@ assign data_found = data_direct | data_hit_exist | TLBP;
 assign data_V_flag = 
     data_direct |
     TLBP        |
-    (data_hit_exist & (data_vaddr_in[data_mask_highbit[i]] ? EntryLo1[data_hit_idx][`VALID] : EntryLo0[data_hit_idx][`VALID]) );
+    (data_hit_exist & (data_vaddr_in[data_mask_highbit[data_hit_idx]] ? EntryLo1[data_hit_idx][`VALID] : EntryLo0[data_hit_idx][`VALID]) );
 
 assign data_D_flag = 
     data_direct |
-    (data_hit_exist & (data_vaddr_in[data_mask_highbit[i]] ? EntryLo1[data_hit_idx][`DIRTY] : EntryLo0[data_hit_idx][`DIRTY]) );
+    (data_hit_exist & (data_vaddr_in[data_mask_highbit[data_hit_idx]] ? EntryLo1[data_hit_idx][`DIRTY] : EntryLo0[data_hit_idx][`DIRTY]) );
 
 //TLBP
 assign Index_out = TLBP ? 
