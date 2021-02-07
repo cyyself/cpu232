@@ -88,6 +88,7 @@ assign current_ASID = EntryHi_in[`ASID];
 //针对多匹配情况，根据龙芯LS232处理器核用户手册-V1.0 P14, 3.1.5描述，软件要控制不要让多项命中的情况发生，因此这里不做处理
 //匹配采用===，这样在TLB没有初始化的情况下依然可以正常输出信号
 //---- inst
+wire [4:0] inst_mask_highbit [`TLB_LINE-1:0];
 wire inst_hit [`TLB_LINE-1:0];
 wire inst_hit_exist;
 wire [`TLB_WIDTH-1:0] inst_hit_idx;
@@ -95,11 +96,21 @@ genvar i;
 generate
     for(i=0;i<`TLB_LINE;i=i+1)
     begin
+        assign inst_mask_highbit[i] = 
+            ( (~PageMask[i][29]) & PageMask[i][28] ? 5'd28 : 5'd0) | 
+            ( (~PageMask[i][27]) & PageMask[i][26] ? 5'd26 : 5'd0) | 
+            ( (~PageMask[i][25]) & PageMask[i][24] ? 5'd24 : 5'd0) | 
+            ( (~PageMask[i][23]) & PageMask[i][22] ? 5'd22 : 5'd0) | 
+            ( (~PageMask[i][21]) & PageMask[i][20] ? 5'd20 : 5'd0) | 
+            ( (~PageMask[i][19]) & PageMask[i][18] ? 5'd18 : 5'd0) | 
+            ( (~PageMask[i][17]) & PageMask[i][16] ? 5'd16 : 5'd0) | 
+            ( (~PageMask[i][15]) & PageMask[i][14] ? 5'd14 : 5'd0) | 
+            ( (~PageMask[i][13]) ? 5'd12 : 5'd0);
         assign inst_hit[i] = 
             (//match
                 (EntryHi0[i][`ASID] === current_ASID)       | 
-                (  inst_vaddr[12]  & EntryLo1[i][`GLOBAL])  | 
-                ((~inst_vaddr[12]) & EntryLo0[i][`GLOBAL])
+                (  inst_vaddr[inst_mask_highbit[i]]  & EntryLo1[i][`GLOBAL])  | 
+                ((~inst_vaddr[inst_mask_highbit[i]]) & EntryLo0[i][`GLOBAL])
             )
             &
             (
@@ -142,7 +153,7 @@ assign inst_paddr_o = {
         inst_hit_exist ? 
         (
             (
-                (inst_vaddr[12] ? EntryLo1[inst_hit_idx][25:6] : EntryLo0[inst_hit_idx][25:6])
+                (inst_vaddr[inst_mask_highbit[i]] ? EntryLo1[inst_hit_idx][25:6] : EntryLo0[inst_hit_idx][25:6])
                 &
                 {1'b1,~PageMask[inst_hit_idx][31:13]}
             )
@@ -164,11 +175,12 @@ assign inst_paddr_o = {
 
 assign inst_V_flag = 
     inst_direct |
-    (inst_hit_exist & (inst_vaddr[12] ? EntryLo1[inst_hit_idx][`VALID] : EntryLo0[inst_hit_idx][`VALID]) );
+    (inst_hit_exist & (inst_vaddr[inst_mask_highbit[i]] ? EntryLo1[inst_hit_idx][`VALID] : EntryLo0[inst_hit_idx][`VALID]) );
 
 //---- data
 //对于TLBP指令的查找，交由data部分进行处理。
 //TODO: 龙芯文档上在TLBP指令有提到TLB[i] 140，与ASID相等是or的关系，猜测是Lo0的Global位，尚不确定。
+wire [4:0] data_mask_highbit [`TLB_LINE-1:0];
 wire data_hit [`TLB_LINE-1:0];
 wire data_hit_exist;
 wire [`TLB_WIDTH-1:0] data_hit_idx;
@@ -178,11 +190,21 @@ genvar j;
 generate
     for(j=0;j<`TLB_LINE;j=j+1)
     begin
+        assign data_mask_highbit[i] = 
+            ( (~PageMask[i][29]) & PageMask[i][28] ? 5'd28 : 5'd0) | 
+            ( (~PageMask[i][27]) & PageMask[i][26] ? 5'd26 : 5'd0) | 
+            ( (~PageMask[i][25]) & PageMask[i][24] ? 5'd24 : 5'd0) | 
+            ( (~PageMask[i][23]) & PageMask[i][22] ? 5'd22 : 5'd0) | 
+            ( (~PageMask[i][21]) & PageMask[i][20] ? 5'd20 : 5'd0) | 
+            ( (~PageMask[i][19]) & PageMask[i][18] ? 5'd18 : 5'd0) | 
+            ( (~PageMask[i][17]) & PageMask[i][16] ? 5'd16 : 5'd0) | 
+            ( (~PageMask[i][15]) & PageMask[i][14] ? 5'd14 : 5'd0) | 
+            ( (~PageMask[i][13]) ? 5'd12 : 5'd0);
         assign data_hit[j] = 
             (//match
                 (EntryHi0[j][`ASID] === current_ASID)       | 
-                (  data_vaddr_tofind[12]  & EntryLo1[j][`GLOBAL])  | 
-                ((~data_vaddr_tofind[12]) & EntryLo0[j][`GLOBAL])
+                (  data_vaddr_tofind[data_mask_highbit[i]]  & EntryLo1[j][`GLOBAL])  | 
+                ((~data_vaddr_tofind[data_mask_highbit[i]]) & EntryLo0[j][`GLOBAL])
             )
             &
             (
@@ -212,6 +234,8 @@ assign data_hit_idx =
     (data_hit[24] ? 24 : 0) | (data_hit[25] ? 25 : 0) | (data_hit[26] ? 26 : 0) | (data_hit[27] ? 27 : 0) |
     (data_hit[28] ? 28 : 0) | (data_hit[29] ? 29 : 0) | (data_hit[30] ? 30 : 0) | (data_hit[31] ? 31 : 0);
 
+
+
 //主要注意的是，由于MIPS Release 1采用了奇偶页面的设计，手册上的表格页大小指的是两个页面之一的大小。但匹配的时候相当于将那个大小*2之后进行匹配
 
 //最终的地址逻辑是按照uCore代码写的，不确定是否符合MIPS标准，先把uCore跑通再说吧
@@ -226,7 +250,7 @@ assign data_paddr_o = {
         data_hit_exist & !TLBP ?
         (
             (
-                (data_vaddr_in[12] ? EntryLo1[data_hit_idx][25:6] : EntryLo0[data_hit_idx][25:6])
+                (data_vaddr_in[data_mask_highbit[i]] ? EntryLo1[data_hit_idx][25:6] : EntryLo0[data_hit_idx][25:6])
                 &
                 {1'b1,~PageMask[data_hit_idx][31:13]}
             )
@@ -252,11 +276,11 @@ assign data_found = data_direct | data_hit_exist | TLBP;
 assign data_V_flag = 
     data_direct |
     TLBP        |
-    (data_hit_exist & (data_vaddr_in[12] ? EntryLo1[data_hit_idx][`VALID] : EntryLo0[data_hit_idx][`VALID]) );
+    (data_hit_exist & (data_vaddr_in[data_mask_highbit[i]] ? EntryLo1[data_hit_idx][`VALID] : EntryLo0[data_hit_idx][`VALID]) );
 
 assign data_D_flag = 
     data_direct |
-    (data_hit_exist & (data_vaddr_in[12] ? EntryLo1[data_hit_idx][`DIRTY] : EntryLo0[data_hit_idx][`DIRTY]) );
+    (data_hit_exist & (data_vaddr_in[data_mask_highbit[i]] ? EntryLo1[data_hit_idx][`DIRTY] : EntryLo0[data_hit_idx][`DIRTY]) );
 
 //TLBP
 assign Index_out = TLBP ? 
